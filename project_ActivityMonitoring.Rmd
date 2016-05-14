@@ -1,0 +1,158 @@
+---
+title: ' Activity Monitoring - Reproducible research project '
+author: "Michalis Frangos"
+output: 
+    html_document
+       keep_md: true
+---
+
+## Data description 
+This assignment makes use of data from a personal activity monitoring device. 
+This device collects data at 5 minute intervals through out the day. The data 
+consists of two months of data from an anonymous individual collected during 
+the months of October and November, 2012 and include the number of steps taken 
+in 5 minute intervals each day.
+
+The variables included in this dataset are:
+* steps: Number of steps taking in a 5-minute interval (missing values as 𝙽𝙰)
+* date: The date on which the measurement was taken in YYYY-MM-DD format
+* interval: Identifier for the 5-minute interval in which measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there are a 
+total of 17,568 observations in this dataset.
+
+Data can be found [here][1]
+[1]: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip  "here"
+
+## Downloading and unzipping dataset
+```{r downloding,echo = TRUE}
+
+fileName <- "activity.csv"
+fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+
+if (!file.exists("downloads") & !file.exists(fileName)){
+        message("- downloading data")
+        dir.create("downloads")
+        download.file(fileUrl,destfile = "./downloads/project_data.zip",method = "auto") 
+        dateDownloaded <- date()
+        message("- data downloaded")
+} else {
+        message("- data already downloaded")  
+}
+
+if  (!file.exists(fileName)){
+        message("- unzipping data")
+        unzip("./downloads/project_data.zip")
+        message("- data unzipped")
+} else {
+        message("- data file exists")      
+}
+```
+
+## Reading in and processing data
+```{r reading, ECHO = TRUE}
+# read csv file
+data <- read.csv(fileName,na.strings = "NA")
+# Convert the Date variable to date class in R
+data$date <- as.Date(data$date,"%Y-%m-%d") # %>% as.Date("%d/%m/%Y")
+# look at data
+head(data)
+```
+
+# What is mean total number of steps taken per day?
+
+```{r totalmean,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5} 
+library(dplyr)
+
+# Convert the Date variable to date class in R
+dataMutated <- group_by(data,date) %>%
+        summarize(stepsPerDay = sum(steps,na.rm= TRUE))
+head(dataMutated)
+mean_stepsPerDay = mean(dataMutated$stepsPerDay, na.rm = TRUE)
+median_stepsPerDay = median(dataMutated$stepsPerDay, na.rm = TRUE)
+
+text_legend1 <- paste("mean",round(mean_stepsPerDay,digits=2),sep = " = ")
+text_legend2 <- paste("median",round(median_stepsPerDay,digits=2),sep = " = ")
+with(dataMutated,{ hist(stepsPerDay,
+                        main = "Total steps taken per day",breaks = 30)
+        abline(v = mean_stepsPerDay,col = "red",lwd = 2)
+        abline(v = median_stepsPerDay,col = "blue",lwd = 2,lty=2)
+        legend("topright",lty=c(1,2),col=c("red","blue"),
+               legend=c(text_legend1,text_legend2) ) })
+```
+
+# What is the average daily activity pattern?
+```{r averageF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5} 
+library(ggplot2)
+dataMutated <- group_by(data,interval) %>%
+        summarize(meanSteps = mean(steps,na.rm= TRUE))
+head(dataMutated)
+max_index <- which.max(dataMutated$meanSteps)
+max_interval <- dataMutated$interval[max_index]
+max_steps <- dataMutated$meanSteps[max_index]
+
+text_legend1 <-"mean pattern per interval"
+text_legend2 <- paste("maximum 5-minute interval",max_interval,sep = " = ")
+with(dataMutated,{ plot(interval,meanSteps,
+                        main = "average daily activity pattern",type = "l")
+        abline(v = max_interval,col = "blue",lwd = 1,lty = 2)
+        legend("topright",lty=c(1,2),col=c("black","blue"),
+               legend=c(text_legend1,text_legend2)) 
+})
+```
+
+# Imputing missing values
+
+- The number of missing values in data is: 
+
+```{r missingF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+ok <- complete.cases(data)
+print(sum(!ok))
+```
+
+- Filling missing values in the dataset by replacing with mean of interval
+
+```{r replacingF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+library(ggplot2)
+
+df <- group_by(data,interval) %>%
+        summarize(meanSteps = mean(steps,na.rm= TRUE))
+df <- merge(df,data)
+ok <- complete.cases(df)             # find which entries to replace
+df$steps[!ok] <- df$meanSteps[!ok]   # replace with mean of interval
+df <- subset(df, select = names(data))%>%
+        arrange(desc(date))         # order by date as in original data
+
+head(df)
+```
+
+- What is mean total number of steps taken per day?
+
+```{r histReplacement,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+dataMutated <- group_by(df,date) %>%
+        summarize(stepsPerDay = sum(steps,na.rm= TRUE))
+mean_stepsPerDay = mean(dataMutated$stepsPerDay, na.rm = TRUE)
+median_stepsPerDay = median(dataMutated$stepsPerDay, na.rm = TRUE)
+summary(dataMutated)
+text_legend1 <- paste("mean",round(mean_stepsPerDay,digits=2),sep = " = ")
+text_legend2 <- paste("median",round(median_stepsPerDay,digits=2),sep = " = ")
+with(dataMutated,{ hist(stepsPerDay,
+                        main = "Total steps taken per day (replacement)",
+                        breaks = 30)
+        abline(v = mean_stepsPerDay,col = "red",lwd = 2)
+        abline(v = median_stepsPerDay,col = "blue",lwd = 2,lty=2)
+        legend("topright",lty=c(1,2),col=c("red","blue"),
+               legend=c(text_legend1,text_legend2) ) })
+```
+
+### Total number of steps taken per day (replacement VS ignoring NA's)
+
+The strategy  followed  to replace the missing values, is to place them with the 
+corresponding mean of their interval, as computed from the available data.
+In the previous example the missing values were ignored, and a large number of
+days ended up with sum of steps equal to zero. In this case  the missing values
+were replaced by the mean of their corresponding interval,the number of days 
+with zero steps per day are less than before. As a result the mean and median
+are now the same, and the distribution is similar to a Normal distibution.
+
+## Are there differences in activity patterns between weekdays and weekends?
