@@ -1,9 +1,7 @@
 ---
 title: ' Activity Monitoring - Reproducible research project '
 author: "Michalis Frangos"
-output: 
-    html_document
-       keep_md: true
+output: html_document
 ---
 
 ## Data description 
