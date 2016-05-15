@@ -51,7 +51,11 @@ if  (!file.exists(fileName)){
 ```
 
 ```
-## - data file exists
+## - unzipping data
+```
+
+```
+## - data unzipped
 ```
 
 ## Reading in and processing data
