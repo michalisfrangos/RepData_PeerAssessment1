@@ -1,11 +1,5 @@
----
-title: ' Activity Monitoring - Reproducible research project '
-author: "Michalis Frangos"
-
-output: 
-        html_document:
-                keep_md: true
----
+#  Activity Monitoring - Reproducible research project 
+Michalis Frangos  
 
 ## Data description 
 This assignment makes use of data from a personal activity monitoring device. 
@@ -26,8 +20,8 @@ Data can be found [here][1]
 [1]: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip  "here"
 
 ## Downloading and unzipping dataset
-```{r downloding,echo = TRUE}
 
+```r
 fileName <- "activity.csv"
 fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
@@ -40,7 +34,13 @@ if (!file.exists("downloads") & !file.exists(fileName)){
 } else {
         message("- data already downloaded")  
 }
+```
 
+```
+## - data already downloaded
+```
+
+```r
 if  (!file.exists(fileName)){
         message("- unzipping data")
         unzip("./downloads/project_data.zip")
@@ -50,8 +50,13 @@ if  (!file.exists(fileName)){
 }
 ```
 
+```
+## - data file exists
+```
+
 ## Reading in and processing data
-```{r reading, ECHO = TRUE}
+
+```r
 # read csv file
 data <- read.csv(fileName,na.strings = "NA")
 # Convert the Date variable to date class in R
@@ -60,9 +65,20 @@ data$date <- as.Date(data$date,"%Y-%m-%d")
 head(data)
 ```
 
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+```
+
 # What is the mean total number of steps taken per day?
 
-```{r totalmean,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5} 
+
+```r
 library(dplyr)
 library(lattice)
 # group by date and sum steps by date
@@ -83,8 +99,11 @@ with(dataMutated,{ hist(stepsPerDay,
                legend=c(text_legend1,text_legend2) ) })
 ```
 
+![](project_ActivityMonitoring_files/figure-html/totalmean-1.png)
+
 # What is the average daily activity pattern?
-```{r averageF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5} 
+
+```r
 library(ggplot2)
 # group by interval and compute means of intervals
 dataMutated <- group_by(data,interval) %>%
@@ -105,19 +124,27 @@ with(dataMutated,{ plot(interval,meanSteps,
 })
 ```
 
+![](project_ActivityMonitoring_files/figure-html/averageF-1.png)
+
 # Imputing missing values
 
 - The number of missing values in data is: 
 
-```{r missingF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+
+```r
 # find complete cases
 ok <- complete.cases(data)
 print(paste(sum(!ok)))
 ```
 
+```
+## [1] "2304"
+```
+
 - Filling missing values in the dataset by replacing with mean of interval
 
-```{r replacingF,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+
+```r
 library(ggplot2)
 # group by niterval and compute means
 df <- group_by(data,interval) %>%
@@ -131,7 +158,8 @@ df <- subset(df, select = names(data))%>%
 
 - What is mean total number of steps taken per day?
 
-```{r histReplacement,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+
+```r
 dataMutated <- group_by(df,date) %>%
         summarize(stepsPerDay = sum(steps,na.rm= TRUE))
 mean_stepsPerDay = mean(dataMutated$stepsPerDay, na.rm = TRUE)
@@ -146,6 +174,8 @@ with(dataMutated,{ hist(stepsPerDay,
         legend("topright",lty=c(1,2),col=c("red","blue"),
                legend=c(text_legend1,text_legend2) ) })
 ```
+
+![](project_ActivityMonitoring_files/figure-html/histReplacement-1.png)
 
 ### Total number of steps taken per day (replacement VS ignoring NA's)
 
@@ -162,7 +192,8 @@ are now the same, and the distribution is similar to a Normal distibution.
 Create a new factor variable in the dataset with two levels – “weekday” and 
 “weekend” indicating whether a given date is a weekday or weekend day.
 
-```{r week,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
+
+```r
 days <- df$dates
 days[weekdays(df$date) %in% c("Saturday","Sunday")] <- "weekend"
 days[!(weekdays(df$date) %in% c("Saturday","Sunday"))] <- "weekday"
@@ -176,8 +207,8 @@ all weekday days or weekend days (y-axis). See the README file in the GitHub
 repository to see an example of what this plot should look like using simulated 
 data.
 
-```{r panel,ECHO=TRUE,message=FALSE,warning=F,fig.width=7,fig.height=5}
 
+```r
 df_aggr <- aggregate(df$steps, 
                      list(interval = df$interval,weektime=df$weektime),mean)
 names(df_aggr)[names(df_aggr) == 'x']  <- "steps"
@@ -185,4 +216,6 @@ with(df_aggr,{xyplot(steps~interval| weektime, layout = c(1,2),
                      main="Average Steps per Day",type="l")
 })
 ```
+
+![](project_ActivityMonitoring_files/figure-html/panel-1.png)
 
