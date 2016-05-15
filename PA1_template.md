@@ -99,7 +99,7 @@ with(dataMutated,{ hist(stepsPerDay,
                legend=c(text_legend1,text_legend2) ) })
 ```
 
-![](project_ActivityMonitoring_files/figure-html/totalmean-1.png)
+![](PA1_template_files/figure-html/totalmean-1.png)
 
 # What is the average daily activity pattern?
 
@@ -124,7 +124,7 @@ with(dataMutated,{ plot(interval,meanSteps,
 })
 ```
 
-![](project_ActivityMonitoring_files/figure-html/averageF-1.png)
+![](PA1_template_files/figure-html/averageF-1.png)
 
 # Imputing missing values
 
@@ -175,7 +175,7 @@ with(dataMutated,{ hist(stepsPerDay,
                legend=c(text_legend1,text_legend2) ) })
 ```
 
-![](project_ActivityMonitoring_files/figure-html/histReplacement-1.png)
+![](PA1_template_files/figure-html/histReplacement-1.png)
 
 ### Total number of steps taken per day (replacement VS ignoring NA's)
 
@@ -217,5 +217,5 @@ with(df_aggr,{xyplot(steps~interval| weektime, layout = c(1,2),
 })
 ```
 
-![](project_ActivityMonitoring_files/figure-html/panel-1.png)
+![](PA1_template_files/figure-html/panel-1.png)
 
